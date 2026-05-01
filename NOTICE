@@ -1,0 +1,9 @@
+MLX Training Studio Installer
+Copyright 2026 Jay German
+
+This product packages and installs MLX Training Studio (mlx-lm-gui),
+which is Copyright (c) Steven Atkin and contributors,
+licensed under the Apache License, Version 2.0.
+Source: https://github.com/stevenatkin/mlx-lm-gui
+
+This installer is independent of and unaffiliated with the upstream project.

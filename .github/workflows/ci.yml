@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: shellcheck + shfmt
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y shellcheck
+
+      - name: Install shfmt
+        run: |
+          curl -fsSL https://github.com/mvdan/sh/releases/download/v3.8.0/shfmt_v3.8.0_linux_amd64 \
+            -o /usr/local/bin/shfmt
+          chmod +x /usr/local/bin/shfmt
+
+      - name: Run shellcheck
+        run: |
+          shellcheck \
+            install.sh \
+            bin/mlx-training-studio \
+            lib/log.sh \
+            lib/checks.sh \
+            lib/prompts.sh \
+            lib/build.sh \
+            lib/manifest.sh
+
+      - name: Run shfmt (check formatting)
+        run: |
+          shfmt --diff \
+            install.sh \
+            bin/mlx-training-studio \
+            lib/log.sh \
+            lib/checks.sh \
+            lib/prompts.sh \
+            lib/build.sh \
+            lib/manifest.sh

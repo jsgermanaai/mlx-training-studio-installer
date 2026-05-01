@@ -1,0 +1,201 @@
+#!/usr/bin/env bash
+# bin/mlx-training-studio — Main CLI dispatcher for MLX Training Studio Installer.
+#
+# Subcommands: install, update, uninstall, doctor, status, help
+# When installed via Homebrew, MLX_TS_LIB_DIR is injected by the formula shim.
+
+set -euo pipefail
+IFS=$'\n\t'
+
+# ---------------------------------------------------------------------------
+# Resolve the lib directory.
+# Priority: MLX_TS_LIB_DIR env var (set by Homebrew shim), then relative to
+# this script's real location.
+# ---------------------------------------------------------------------------
+_resolve_lib_dir() {
+  if [[ -n "${MLX_TS_LIB_DIR:-}" ]]; then
+    printf '%s' "$MLX_TS_LIB_DIR"
+    return
+  fi
+
+  local script_path="${BASH_SOURCE[0]}"
+  # Follow symlinks to find the real script location.
+  while [[ -L "$script_path" ]]; do
+    script_path="$(readlink "$script_path")"
+  done
+  local script_dir
+  script_dir="$(cd "$(dirname "$script_path")" && pwd)"
+  printf '%s' "${script_dir}/../lib"
+}
+
+LIB_DIR="$(_resolve_lib_dir)"
+
+# Source shared libraries.
+# shellcheck source=../lib/log.sh
+source "${LIB_DIR}/log.sh"
+# shellcheck source=../lib/checks.sh
+source "${LIB_DIR}/checks.sh"
+# shellcheck source=../lib/prompts.sh
+source "${LIB_DIR}/prompts.sh"
+# shellcheck source=../lib/manifest.sh
+source "${LIB_DIR}/manifest.sh"
+# shellcheck source=../lib/build.sh
+source "${LIB_DIR}/build.sh"
+
+# ---------------------------------------------------------------------------
+# usage — print usage information.
+# ---------------------------------------------------------------------------
+usage() {
+  cat >&2 <<EOF
+MLX Training Studio Installer
+
+Usage:
+  mlx-training-studio <subcommand> [options]
+
+Subcommands:
+  install    Run preflight checks, clone, build, and install the app.
+  update     Pull latest upstream changes, rebuild, and replace the installed app.
+  uninstall  Remove the installed app; prompt to remove source and manifest.
+  doctor     Run preflight checks and print results. Makes no changes.
+  status     Print the install manifest (version, commit, paths, timestamp).
+  help       Show this help message.
+
+Environment variables:
+  MLX_TS_NONINTERACTIVE=1   Skip interactive prompts; use defaults.
+  MLX_TS_SOURCE_DIR         Override the source clone directory.
+  MLX_TS_INSTALL_DIR        Override the app install directory.
+  MLX_TS_REF                Pin to a specific git ref (commit SHA or tag).
+  MLX_TS_LIB_DIR            Path to lib/ directory (set by Homebrew shim).
+EOF
+}
+
+# ---------------------------------------------------------------------------
+# cmd_install — full install sequence.
+# ---------------------------------------------------------------------------
+cmd_install() {
+  info "=== MLX Training Studio Installer — install ==="
+  run_all_checks || die "Preflight checks failed. Aborting."
+  gather_install_preferences
+  run_full_install
+  ok "=== Installation complete ==="
+  info "Launch the app: open \"${MLX_TS_INSTALL_DIR}/MLX GUI.app\""
+}
+
+# ---------------------------------------------------------------------------
+# cmd_update — pull latest, rebuild, reinstall.
+# ---------------------------------------------------------------------------
+cmd_update() {
+  info "=== MLX Training Studio Installer — update ==="
+
+  if ! manifest_exists; then
+    die "No installation found. Run 'mlx-training-studio install' first."
+  fi
+
+  # Load stored preferences from manifest so we use the same paths.
+  local manifest_content
+  manifest_content="$(read_manifest)"
+
+  # Parse source_path and app_path from the manifest JSON without jq.
+  local stored_source_path stored_app_path
+  stored_source_path="$(printf '%s' "$manifest_content" | grep '"source_path"' | sed 's/.*: *"\([^"]*\)".*/\1/')"
+  stored_app_path="$(printf '%s' "$manifest_content" | grep '"app_path"' | sed 's/.*: *"\([^"]*\)".*/\1/')"
+
+  # Allow env overrides; fall back to manifest values.
+  MLX_TS_SOURCE_DIR="${MLX_TS_SOURCE_DIR:-$stored_source_path}"
+  MLX_TS_INSTALL_DIR="${MLX_TS_INSTALL_DIR:-$(dirname "$stored_app_path")}"
+  export MLX_TS_SOURCE_DIR MLX_TS_INSTALL_DIR
+
+  run_all_checks || die "Preflight checks failed. Aborting."
+  run_full_install
+  ok "=== Update complete ==="
+}
+
+# ---------------------------------------------------------------------------
+# cmd_uninstall — remove the installed .app; prompt about source dir.
+# ---------------------------------------------------------------------------
+cmd_uninstall() {
+  info "=== MLX Training Studio Installer — uninstall ==="
+
+  if ! manifest_exists; then
+    warn "No manifest found. Attempting to locate app at default path."
+  fi
+
+  local manifest_content app_path source_path
+  if manifest_exists; then
+    manifest_content="$(read_manifest)"
+    app_path="$(printf '%s' "$manifest_content" | grep '"app_path"' | sed 's/.*: *"\([^"]*\)".*/\1/')"
+    source_path="$(printf '%s' "$manifest_content" | grep '"source_path"' | sed 's/.*: *"\([^"]*\)".*/\1/')"
+  else
+    app_path="/Applications/MLX GUI.app"
+    source_path="${HOME}/Library/Application Support/MLX Training Studio/source"
+  fi
+
+  # Remove the .app bundle.
+  if [[ -d "$app_path" ]]; then
+    info "Removing: $app_path"
+    rm -rf "$app_path"
+    ok "App removed."
+  else
+    warn "App not found at: $app_path"
+  fi
+
+  # Optionally remove the source directory.
+  if [[ -d "$source_path" ]]; then
+    if confirm "Remove source directory '$source_path'?" "n"; then
+      rm -rf "$source_path"
+      ok "Source directory removed."
+    else
+      info "Source directory kept."
+    fi
+  fi
+
+  # Optionally remove the manifest.
+  if [[ -f "$MANIFEST_PATH" ]]; then
+    rm -f "$MANIFEST_PATH"
+    ok "Manifest removed."
+  fi
+
+  ok "=== Uninstall complete ==="
+}
+
+# ---------------------------------------------------------------------------
+# cmd_doctor — run preflight checks; no side effects.
+# ---------------------------------------------------------------------------
+cmd_doctor() {
+  info "=== MLX Training Studio Installer — doctor ==="
+  local exit_code=0
+  run_all_checks || exit_code=$?
+  return "$exit_code"
+}
+
+# ---------------------------------------------------------------------------
+# cmd_status — print the install manifest.
+# ---------------------------------------------------------------------------
+cmd_status() {
+  info "=== MLX Training Studio Installer — status ==="
+  read_manifest
+}
+
+# ---------------------------------------------------------------------------
+# Dispatch
+# ---------------------------------------------------------------------------
+main() {
+  local subcommand="${1:-help}"
+  shift || true
+
+  case "$subcommand" in
+    install)   cmd_install "$@" ;;
+    update)    cmd_update "$@" ;;
+    uninstall) cmd_uninstall "$@" ;;
+    doctor)    cmd_doctor "$@" ;;
+    status)    cmd_status "$@" ;;
+    help|-h|--help) usage ;;
+    *)
+      err "Unknown subcommand: $subcommand"
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"
