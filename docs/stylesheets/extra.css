@@ -1,0 +1,26 @@
+/* MLX Training Studio Installer — MkDocs Material custom styles */
+
+/* Slightly wider content area to give code blocks room to breathe */
+.md-grid {
+  max-width: 1280px;
+}
+
+/* Bump heading weight for a stronger visual hierarchy */
+.md-typeset h1,
+.md-typeset h2 {
+  font-weight: 700;
+}
+
+.md-typeset h3 {
+  font-weight: 600;
+}
+
+/* Give code blocks a touch more padding */
+.md-typeset pre > code {
+  padding: 1.1em 1.25em;
+}
+
+/* Feature grid cards — consistent min-height */
+.md-typeset .grid.cards > ul > li {
+  min-height: 8rem;
+}

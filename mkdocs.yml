@@ -1,0 +1,125 @@
+site_name: MLX Training Studio Installer
+site_description: >-
+  One-command installer for MLX Training Studio — a native macOS GUI for
+  fine-tuning LLMs on Apple Silicon with mlx-lm-lora.
+site_url: https://jsgermanaai.github.io/mlx-training-studio-installer/
+repo_url: https://github.com/jsgermanaai/mlx-training-studio-installer
+repo_name: jsgermanaai/mlx-training-studio-installer
+edit_uri: edit/main/docs/
+copyright: >-
+  Copyright &copy; 2026 Jay German.
+  App source &copy; Steven Atkin (Apache-2.0).
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: pink
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: pink
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+    - content.action.view
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.snippets:
+      base_path:
+        - .
+  - pymdownx.highlight:
+      line_spans: __span
+      anchor_linenums: true
+      line_anchors: __span
+  - pymdownx.inlinehilite
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.caret
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      type: timeago
+      fallback_to_build_date: true
+  - minify:
+      minify_html: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/jsgermanaai/mlx-training-studio-installer
+      name: Installer on GitHub
+    - icon: fontawesome/brands/github
+      link: https://github.com/stevenatkin/mlx-lm-gui
+      name: Upstream app on GitHub
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - getting-started/index.md
+    - Requirements: getting-started/requirements.md
+    - Quick Install: getting-started/quick-install.md
+    - First Run: getting-started/first-run.md
+  - Usage:
+    - Commands: usage/commands.md
+    - Configuration: usage/configuration.md
+    - Updating & Uninstalling: usage/maintenance.md
+  - Reference:
+    - Architecture: reference/architecture.md
+    - Environment Variables: reference/env-vars.md
+    - Files & Paths: reference/paths.md
+    - The Upstream App: reference/upstream.md
+  - Help:
+    - Troubleshooting: help/troubleshooting.md
+    - FAQ: help/faq.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
