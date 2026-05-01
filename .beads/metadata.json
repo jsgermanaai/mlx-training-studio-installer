@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "mlx_training_studio_installer",
+  "project_id": "a887baa9-da31-4e7b-be40-d7f715aafecc"
+}
