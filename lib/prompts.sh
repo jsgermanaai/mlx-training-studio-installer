@@ -39,8 +39,8 @@ gather_install_preferences() {
     local choice
     prompt choice "Choose install location [1/2]" "1"
     case "$choice" in
-      2) MLX_TS_INSTALL_DIR="${HOME}/Applications" ;;
-      *) MLX_TS_INSTALL_DIR="/Applications" ;;
+    2) MLX_TS_INSTALL_DIR="${HOME}/Applications" ;;
+    *) MLX_TS_INSTALL_DIR="/Applications" ;;
     esac
   fi
   export MLX_TS_INSTALL_DIR

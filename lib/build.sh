@@ -77,10 +77,10 @@ build_app() {
 _filter_xcodebuild_output() {
   while IFS= read -r line; do
     case "$line" in
-      "** BUILD SUCCEEDED"*) ok "$line" ;;
-      "** BUILD FAILED"*)    err "$line" ;;
-      error:*)               err "$line" ;;
-      warning:*)             warn "$line" ;;
+    "** BUILD SUCCEEDED"*) ok "$line" ;;
+    "** BUILD FAILED"*) err "$line" ;;
+    error:*) err "$line" ;;
+    warning:*) warn "$line" ;;
     esac
   done
 }

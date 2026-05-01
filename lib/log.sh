@@ -114,7 +114,7 @@ confirm() {
   reply="${reply:-$default}"
 
   case "$reply" in
-    [yY][eE][sS]|[yY]) return 0 ;;
-    *) return 1 ;;
+  [yY][eE][sS] | [yY]) return 0 ;;
+  *) return 1 ;;
   esac
 }
